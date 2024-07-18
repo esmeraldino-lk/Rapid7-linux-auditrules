@@ -1,0 +1,949 @@
+## First Rule to delete all rules
+-D
+
+## Increase the buffers to survive stress events.
+-b 8192
+
+## ignore errors
+-i 1
+
+## Required for Insight Agent
+-a always,exit -F arch=b64 -S execve -F key=execve
+
+## CUSTOM RULES HERE
+
+## Cron configuration & scheduled jobs
+-w /etc/cron.allow -p wa -k cron
+-w /etc/cron.deny -p wa -k cron
+-w /etc/cron.d/ -p wa -k cron
+-w /etc/cron.daily/ -p wa -k cron
+-w /etc/cron.hourly/ -p wa -k cron
+-w /etc/cron.monthly/ -p wa -k cron
+-w /etc/cron.weekly/ -p wa -k cron
+-w /etc/crontab -p wa -k cron
+-w /var/spool/cron/ -p wa -k cron
+
+## User, group, password databases
+-w /etc/group -p wa -k etcgroup
+-w /etc/passwd -p wa -k etcpasswd
+-w /etc/gshadow -k etcgroup
+-w /etc/shadow -k etcpasswd
+-w /etc/security/opasswd -k opasswd
+
+## SUDOERS.D
+-w /etc/sudoers.d/ -p wa -k sudoers.d
+
+## Sudoers file changes
+-w /etc/sudoers -p wa -k actions
+-w /etc/sudoers.d/ -p wa -k actions
+
+## Passwd
+-w /usr/bin/passwd -p x -k passwd_modification
+
+## Login configuration and information
+-w /etc/login.defs -p wa -k login
+-w /etc/securetty -p wa -k login
+-w /var/log/faillog -p wa -k login
+-w /var/log/lastlog -p wa -k login
+-w /var/log/tallylog -p wa -k login
+
+### Detect Remote Shell Use
+-a always,exit -F arch=b64 -F exe=/bin/bash -F success=1 -S connect -k "remote_shell"
+-a always,exit -F arch=b64 -F exe=/usr/bin/bash -F success=1 -S connect -k "remote_shell"
+
+## Pam configuration
+-w /etc/pam.d/ -p wa -k pam
+-w /etc/security/limits.conf -p wa  -k pam
+-w /etc/security/limits.d -p wa  -k pam
+-w /etc/security/pam_env.conf -p wa -k pam
+-w /etc/security/namespace.conf -p wa -k pam
+-w /etc/security/namespace.d -p wa -k pam
+-w /etc/security/namespace.init -p wa -k pam
+
+## Critical elements access failures
+-a always,exit -F arch=b64 -S open -F dir=/etc -F success=0 -k unauthedfileaccess
+-a always,exit -F arch=b64 -S open -F dir=/bin -F success=0 -k unauthedfileaccess
+-a always,exit -F arch=b64 -S open -F dir=/sbin -F success=0 -k unauthedfileaccess
+-a always,exit -F arch=b64 -S open -F dir=/usr/bin -F success=0 -k unauthedfileaccess
+-a always,exit -F arch=b64 -S open -F dir=/usr/sbin -F success=0 -k unauthedfileaccess
+-a always,exit -F arch=b64 -S open -F dir=/var -F success=0 -k unauthedfileaccess
+-a always,exit -F arch=b64 -S open -F dir=/home -F success=0 -k unauthedfileaccess
+-a always,exit -F arch=b64 -S open -F dir=/srv -F success=0 -k unauthedfileaccess
+
+## Reconnaissance
+-w /usr/bin/whoami -p x -k recon
+-w /usr/bin/id -p x -k recon
+-w /bin/hostname -p x -k recon
+-w /bin/uname -p x -k recon
+-w /etc/issue -p r -k recon
+-w /etc/hostname -p r -k recon
+
+## Suspicious activity
+-w /usr/bin/wget -p x -k susp_activity
+-w /usr/bin/curl -p x -k susp_activity
+-w /usr/bin/base64 -p x -k susp_activity
+-w /bin/nc -p x -k susp_activity
+-w /bin/netcat -p x -k susp_activity
+-w /usr/bin/ncat -p x -k susp_activity
+-w /usr/bin/ss -p x -k susp_activity
+-w /usr/bin/netstat -p x -k susp_activity
+-w /usr/bin/ssh -p x -k susp_activity
+-w /usr/bin/scp -p x -k susp_activity
+-w /usr/bin/sftp -p x -k susp_activity
+-w /usr/bin/ftp -p x -k susp_activity
+-w /usr/bin/socat -p x -k susp_activity
+-w /usr/bin/wireshark -p x -k susp_activity
+-w /usr/bin/tshark -p x -k susp_activity
+-w /usr/bin/rawshark -p x -k susp_activity
+-w /usr/bin/rdesktop -p x -k susp_activity
+-w /usr/local/bin/rdesktop -p x -k susp_activity
+-w /usr/bin/wlfreerdp -p x -k susp_activity
+-w /usr/bin/xfreerdp -p x -k susp_activity
+-w /usr/local/bin/xfreerdp -p x -k susp_activity
+-w /usr/bin/nmap -p x -k susp_activity
+
+### uftp
+### https://sourceforge.net/projects/uftp-multicast/
+### UFTP is an encrypted multicast file transfer program, designed to securely, reliably, 
+### and efficiently transfer files to multiple receivers simultaneously.
+### FTP also has the capability to communicate over disjoint networks separated by one or 
+### more firewalls (NAT traversal) and without full end-to-end multicast capability 
+### (multicast tunneling) through the use of a UFTP proxy server.
+### T1133_External_Remote_Services
+-w /usr/bin/uftp -p x -k susp_activity
+-w /usr/sbin/uftp -p x -k susp_activity
+
+-w /lib/systemd/system/uftp.service -k susp_activity
+-w /usr/lib/systemd/system/uftp.service -k susp_activity
+
+### atftpd
+### https://sourceforge.net/projects/atftp/
+### https://github.com/madmartin/atftp
+### atftp is a client/server implementation of the TFTP protocol that implements RFCs 1350, 2090, 2347, 2348, 2349 and 7440. 
+### The server is multi-threaded and the client presents a friendly interface using libreadline.
+### T1133_External_Remote_Services
+-w /usr/bin/atftpd -p x -k susp_activity
+-w /usr/sbin/atftpd -p x -k susp_activity
+
+-w /usr/bin/in.tftpd -p x -k susp_activity
+-w /usr/sbin/in.tftpd -p x -k susp_activity
+
+-w /lib/systemd/system/atftpd.service -k susp_activity
+-w /usr/lib/systemd/system/atftpd.service -k susp_activity
+
+-w /lib/systemd/system/atftpd.socket -k susp_activity
+-w /usr/lib/systemd/system/atftpd.socket -k susp_activity
+
+## sssd
+-a always,exit -F path=/usr/libexec/sssd/p11_child -F perm=x -F auid>=500 -F auid!=4294967295 -k T1078_Valid_Accounts
+-a always,exit -F path=/usr/libexec/sssd/krb5_child -F perm=x -F auid>=500 -F auid!=4294967295 -k T1078_Valid_Accounts
+-a always,exit -F path=/usr/libexec/sssd/ldap_child -F perm=x -F auid>=500 -F auid!=4294967295 -k T1078_Valid_Accounts
+-a always,exit -F path=/usr/libexec/sssd/selinux_child -F perm=x -F auid>=500 -F auid!=4294967295 -k T1078_Valid_Accounts
+-a always,exit -F path=/usr/libexec/sssd/proxy_child -F perm=x -F auid>=500 -F auid!=4294967295 -k T1078_Valid_Accounts
+
+## vte-2.91
+-a always,exit -F path=/lib64/vte-2.91/gnome-pty-helper -F perm=x -F auid>=500 -F auid!=4294967295 -k T1078_Valid_Accounts
+-a always,exit -F path=/usr/lib64/vte-2.91/gnome-pty-helper -F perm=x -F auid>=500 -F auid!=4294967295 -k T1078_Valid_Accounts
+
+## T1002 Data Compressed
+
+-w /usr/bin/zip -p x -k Data_Compressed
+-w /usr/bin/gzip -p x -k Data_Compressed
+-w /usr/bin/tar -p x -k Data_Compressed
+-w /usr/bin/bzip2 -p x -k Data_Compressed
+
+-w /usr/bin/lzip -p x -k Data_Compressed
+-w /usr/local/bin/lzip -p x -k Data_Compressed
+
+-w /usr/bin/lz4 -p x -k Data_Compressed
+-w /usr/local/bin/lz4 -p x -k Data_Compressed
+
+-w /usr/bin/lzop -p x -k Data_Compressed
+-w /usr/local/bin/lzop -p x -k Data_Compressed
+
+-w /usr/bin/plzip -p x -k Data_Compressed
+-w /usr/local/bin/plzip -p x -k Data_Compressed
+
+-w /usr/bin/pbzip2 -p x -k Data_Compressed
+-w /usr/local/bin/pbzip2 -p x -k Data_Compressed
+
+-w /usr/bin/lbzip2 -p x -k Data_Compressed
+-w /usr/local/bin/lbzip2 -p x -k Data_Compressed
+
+-w /usr/bin/pixz -p x -k Data_Compressed
+-w /usr/local/bin/pixz -p x -k Data_Compressed
+
+-w /usr/bin/pigz -p x -k Data_Compressed
+-w /usr/local/bin/pigz -p x -k Data_Compressed
+-w /usr/bin/unpigz -p x -k Data_Compressed
+-w /usr/local/bin/unpigz -p x -k Data_Compressed
+
+-w /usr/bin/zstd -p x -k Data_Compressed
+-w /usr/local/bin/zstd -p x -k Data_Compressed
+
+## Added to catch netcat on Ubuntu
+-w /bin/nc.openbsd -p x -k susp_activity
+-w /bin/nc.traditional -p x -k susp_activity
+
+## Sbin suspicious activity
+-w /sbin/iptables -p x -k sbin_susp
+-w /sbin/ip6tables -p x -k sbin_susp
+-w /sbin/ifconfig -p x -k sbin_susp
+-w /usr/sbin/arptables -p x -k sbin_susp
+-w /usr/sbin/ebtables -p x -k sbin_susp
+-w /sbin/xtables-nft-multi -p x -k sbin_susp
+-w /usr/sbin/nft -p x -k sbin_susp
+-w /usr/sbin/tcpdump -p x -k sbin_susp
+-w /usr/sbin/traceroute -p x -k sbin_susp
+-w /usr/sbin/ufw -p x -k sbin_susp
+
+### kde4
+-a always,exit -F path=/usr/libexec/kde4/kpac_dhcp_helper -F perm=x -F auid>=1000 -F auid!=4294967295 -k T1078_Valid_Accounts
+-a always,exit -F path=/usr/libexec/kde4/kdesud -F perm=x -F auid>=1000 -F auid!=4294967295 -k T1078_Valid_Accounts
+
+## dbus-send invocation
+### may indicate privilege escalation CVE-2021-3560
+-w /usr/bin/dbus-send -p x -k dbus_send
+-w /usr/bin/gdbus -p x -k gdubs_call
+
+## setfiles
+-a always,exit -F path=/usr/bin/setfiles -F perm=x -F auid>=500 -F auid!=4294967295 -k -F T1078_Valid_Accounts
+-a always,exit -F path=/usr/sbin/setfiles -F perm=x -F auid>=500 -F auid!=4294967295 -k -F T1078_Valid_Accounts
+
+### dbus
+-a always,exit -F path=/lib64/dbus-1/dbus-daemon-launch-helper -F perm=x -F auid>=500 -F auid!=4294967295 -k T1078_Valid_Accounts
+-a always,exit -F path=/usr/lib64/dbus-1/dbus-daemon-launch-helper -F perm=x -F auid>=500 -F auid!=4294967295 -k T1078_Valid_Accounts
+
+## pkexec invocation
+### may indicate privilege escalation CVE-2021-4034
+-w /usr/bin/pkexec -p x -k pkexec
+
+## Suspicious shells
+-w /bin/ash -p x -k susp_shell
+-w /bin/csh -p x -k susp_shell
+-w /bin/fish -p x -k susp_shell
+-w /bin/tcsh -p x -k susp_shell
+-w /bin/tclsh -p x -k susp_shell
+-w /bin/xonsh -p x -k susp_shell
+-w /usr/local/bin/xonsh -p x -k susp_shell
+-w /bin/open -p x -k susp_shell
+-w /bin/rbash -p x -k susp_shell
+
+### https://gtfobins.github.io/gtfobins/wish/
+-w /bin/wish -p x -k susp_shell
+-w /usr/bin/wish -p x -k susp_shell
+
+### https://gtfobins.github.io/gtfobins/yash/
+-w /bin/yash -p x -k susp_shell
+-w /usr/bin/yash -p x -k susp_shell
+
+# Web Server Actvity
+## Change the number "33" to the ID of your WebServer user. Default: www-data:x:33:33
+-a always,exit -F arch=b64 -S execve -F euid=33 -k detect_execve_www
+
+### https://clustershell.readthedocs.io/
+-w /bin/clush -p x -k susp_shell
+-w /usr/local/bin/clush -p x -k susp_shell
+-w /etc/clustershell/clush.conf -p x -k susp_shell
+
+### https://github.com/tmux/tmux
+-w /bin/tmux -p x -k susp_shell
+-w /usr/local/bin/tmux -p x -k susp_shell
+
+## Shell/profile configurations
+-w /etc/profile.d/ -p wa -k shell_profiles
+-w /etc/profile -p wa -k shell_profiles
+-w /etc/shells -p wa -k shell_profiles
+-w /etc/bashrc -p wa -k shell_profiles
+-w /etc/csh.cshrc -p wa -k shell_profiles
+-w /etc/csh.login -p wa -k shell_profiles
+-w /etc/fish/ -p wa -k shell_profiles
+-w /etc/zsh/ -p wa -k shell_profiles
+
+### https://github.com/xxh/xxh
+-w /usr/local/bin/xxh.bash -p x -k susp_shell
+-w /usr/local/bin/xxh.xsh -p x -k susp_shell
+-w /usr/local/bin/xxh.zsh -p x -k susp_shell
+
+## Injection
+### These rules watch for code injection by the ptrace facility.
+### This could indicate someone trying to do something bad or just debugging
+-a always,exit -F arch=b64 -S ptrace -F a0=0x4 -k code_injection
+-a always,exit -F arch=b64 -S ptrace -F a0=0x5 -k data_injection
+-a always,exit -F arch=b64 -S ptrace -F a0=0x6 -k register_injection
+-a always,exit -F arch=b64 -S ptrace -k tracing
+
+## Anonymous File Creation
+### These rules watch the use of memfd_create
+### "memfd_create" creates anonymous file and returns a file descriptor to access it
+### When combined with "fexecve" can be used to stealthily run binaries in memory without touching disk
+-a always,exit -F arch=b64 -S memfd_create -F key=anon_file_create
+
+## Privilege Abuse
+### The purpose of this rule is to detect when an admin may be abusing power by looking in user's home dir.
+-a always,exit -F dir=/home -F auid=0 -F auid>=1000 -F auid!=-1 -C auid!=obj_uid -k power_abuse
+
+# Socket Creations
+# will catch both IPv4 and IPv6
+
+-a always,exit -F arch=b32 -S socket -F a0=2  -k network_socket_created
+-a always,exit -F arch=b64 -S socket -F a0=2  -k network_socket_created
+
+-a always,exit -F arch=b32 -S socket -F a0=10 -k network_socket_created
+-a always,exit -F arch=b64 -S socket -F a0=10 -k network_socket_created
+
+
+## Audit the audit logs. 
+## successful and unsuccessful attempts to read information from the
+## audit records; all modifications to the audit trail
+-w /var/log/audit/ -k auditlog
+
+## Auditd configuration
+## modifications to audit configuration that occur while the audit
+## collection functions are operating.
+-w /etc/audit/ -p wa -k auditconfig
+-w /etc/libaudit.conf -p wa -k auditconfig
+-w /etc/audisp/ -p wa -k audispconfig
+
+## Monitor for use of audit management tools
+-w /sbin/auditctl -p x -k audittools
+-w /sbin/auditd -p x -k audittools
+
+## Monitor AppArmor configuration changes.
+-w /etc/apparmor/ -p wa -k apparmor
+-w /etc/apparmor.d/ -p wa -k apparmor
+
+# Monitor usage of AppArmor tools.
+-w /sbin/apparmor_parser -p x -k apparmor_tools
+-w /usr/sbin/aa-complain -p x -k apparmor_tools
+-w /usr/sbin/aa-disable -p x -k apparmor_tools
+-w /usr/sbin/aa-enforce -p x -k apparmor_tools
+
+## Monitor systemd configuration changes
+-w /etc/systemd/ -p wa -k systemd
+-w /lib/systemd/ -p wa -k systemd
+
+## Monitor usage of systemd tools
+-w /bin/systemctl -p x -k systemd_tools
+-w /bin/journalctl -p x -k systemd_tools
+
+## special files
+-a always,exit -F arch=b32 -S mknod -S mknodat -k specialfiles
+-a always,exit -F arch=b64 -S mknod -S mknodat -k specialfiles
+
+## Mount operations
+-a always,exit -F arch=b32 -S mount -S umount -S umount2 -k mount
+-a always,exit -F arch=b64 -S mount -S umount2 -k mount 
+
+## changes to the time
+##
+-a always,exit -F arch=b32 -S adjtimex -S settimeofday -S clock_settime -k time
+-a always,exit -F arch=b64 -S adjtimex -S settimeofday -S clock_settime -k time
+
+## Use stunnel
+-w /usr/sbin/stunnel -p x -k stunnel
+
+## cron configuration & scheduled jobs
+-w /etc/cron.allow -p wa -k cron
+-w /etc/cron.deny -p wa -k cron
+-w /etc/cron.d/ -p wa -k cron
+-w /etc/cron.daily/ -p wa -k cron
+-w /etc/cron.hourly/ -p wa -k cron
+-w /etc/cron.monthly/ -p wa -k cron
+-w /etc/cron.weekly/ -p wa -k cron
+-w /etc/crontab -p wa -k cron
+-w /var/spool/cron/crontabs/ -k cron
+
+## user, group, password databases
+-w /etc/group -p wa -k etcgroup
+-w /etc/passwd -p wa -k etcpasswd
+-w /etc/gshadow -k etcgroup
+-w /etc/shadow -k etcpasswd
+-w /etc/security/opasswd -k opasswd
+
+## monitor usage of passwd
+-w /usr/bin/passwd -p x -k passwd_modification
+
+#Monitor for use of tools to change group identifiers
+-w /usr/sbin/groupadd -p x -k group_modification
+-w /usr/sbin/groupmod -p x -k group_modification
+-w /usr/sbin/addgroup -p x -k group_modification
+-w /usr/sbin/useradd -p x -k user_modification
+-w /usr/sbin/usermod -p x -k user_modification
+-w /usr/sbin/adduser -p x -k user_modification
+
+## login configuration and information
+-w /etc/login.defs -p wa -k login
+-w /etc/securetty -p wa -k login
+-w /var/log/faillog -p wa -k login
+-w /var/log/lastlog -p wa -k login
+-w /var/log/tallylog -p wa -k login
+
+## network configuration
+-w /etc/hosts -p wa -k hosts
+-w /etc/network/ -p wa -k network
+
+## system startup scripts
+-w /etc/inittab -p wa -k init
+-w /etc/init.d/ -p wa -k init
+-w /etc/init/ -p wa -k init
+
+## library search paths
+-w /etc/ld.so.conf -p wa -k libpath
+
+## local time zone
+-w /etc/localtime -p wa -k localtime
+
+## time zone configuration.
+-w /etc/timezone -p wa -k timezone
+
+## kernel parameters
+-w /etc/sysctl.conf -p wa -k sysctl
+
+## modprobe configuration
+-w /etc/modprobe.conf -p wa -k modprobe
+-w /etc/modprobe.d/ -p wa -k modprobe
+-w /etc/modules -p wa -k modprobe
+
+# Module manipulations.
+-a always,exit -S init_module -S delete_module -k modules
+
+## pam configuration
+-w /etc/pam.d/ -p wa -k pam
+-w /etc/security/limits.conf -p wa  -k pam
+-w /etc/security/pam_env.conf -p wa -k pam
+-w /etc/security/namespace.conf -p wa -k pam
+-w /etc/security/namespace.init -p wa -k pam
+
+## Puppet SSL
+-w /etc/puppet/ssl -p wa -k puppet_ssl
+
+## postfix configuration
+-w /etc/aliases -p wa -k mail
+-w /etc/postfix/ -p wa -k mail
+
+## ssh configuration
+-w /etc/ssh/sshd_config -k sshd
+
+## changes to hostname
+-a exit,always -F arch=b32 -S sethostname -k hostname
+-a exit,always -F arch=b64 -S sethostname -k hostname
+
+## changes to issue
+-w /etc/issue -p wa -k etcissue
+-w /etc/issue.net -p wa -k etcissue
+
+## Changes to IPsec configuration.
+-w /etc/ipsec.conf -p wa -k ipsec
+-w /etc/ipsec.d/ -p wa -k ipsec
+-w /etc/ipsec.secrets -p wa -k ipsec
+
+## Changes to strongSwan configuration.
+-w /etc/strongswan.conf -p wa -k strongswan
+-w /etc/strongswan.d/ -p wa -k strongswan
+
+
+## Capture all failures to access on critical elements
+-a exit,always -F arch=b64 -S open -F dir=/etc -F success=0 -k unauthedfileaccess
+-a exit,always -F arch=b64 -S open -F dir=/bin -F success=0 -k unauthedfileaccess
+-a exit,always -F arch=b64 -S open -F dir=/sbin -F success=0 -k unauthedfileaccess
+-a exit,always -F arch=b64 -S open -F dir=/usr/bin -F success=0 -k unauthedfileaccess
+-a exit,always -F arch=b64 -S open -F dir=/usr/sbin -F success=0 -k unauthedfileaccess
+-a exit,always -F arch=b64 -S open -F dir=/var -F success=0 -k unauthedfileaccess
+-a exit,always -F arch=b64 -S open -F dir=/home -F success=0 -k unauthedfileaccess
+-a exit,always -F arch=b64 -S open -F dir=/srv -F success=0 -k unauthedfileaccess
+-a exit,always -F arch=b64 -S open -F dir=/tmp -F success=0 -k unauthedfileaccess
+
+## Monitor for use of process ID change (switching accounts) applications
+-w /bin/su -p x -k priv_esc
+-w /usr/bin/sudo -p x -k priv_esc
+-w /etc/sudoers -p rw -k priv_esc
+
+## Monitor usage of commands to change power state
+-w /sbin/shutdown -p x -k power
+-w /sbin/poweroff -p x -k power
+-w /sbin/reboot -p x -k power
+-w /sbin/halt -p x -k power
+
+## Monitor admins accessing user files.
+-a always,exit -F dir=/home/ -F uid=0 -C auid!=obj_uid -k admin_user_home
+
+## Monitor changes and executions in /tmp and /var/tmp.
+-w /tmp/ -p wxa -k tmp
+-w /var/tmp/ -p wxa -k tmp
+" | tr -d "" > $auditRulePath2 ## end of writind rules
+
+echo "\
+## First Rule to delete all rules
+-D
+
+## Increase the buffers to survive stress events.
+-b 8192
+
+## ignore errors
+-i 1
+
+## Required for Insight Agent
+-a always,exit -F arch=b64 -S execve -F key=execve
+
+## CUSTOM RULES HERE
+
+## Cron configuration & scheduled jobs
+-w /etc/cron.allow -p wa -k cron
+-w /etc/cron.deny -p wa -k cron
+-w /etc/cron.d/ -p wa -k cron
+-w /etc/cron.daily/ -p wa -k cron
+-w /etc/cron.hourly/ -p wa -k cron
+-w /etc/cron.monthly/ -p wa -k cron
+-w /etc/cron.weekly/ -p wa -k cron
+-w /etc/crontab -p wa -k cron
+-w /var/spool/cron/ -p wa -k cron
+
+## User, group, password databases
+-w /etc/group -p wa -k etcgroup
+-w /etc/passwd -p wa -k etcpasswd
+-w /etc/gshadow -k etcgroup
+-w /etc/shadow -k etcpasswd
+-w /etc/security/opasswd -k opasswd
+
+## SUDOERS.D
+-w /etc/sudoers.d/ -p wa -k sudoers.d
+
+## Sudoers file changes
+-w /etc/sudoers -p wa -k actions
+-w /etc/sudoers.d/ -p wa -k actions
+
+## Passwd
+-w /usr/bin/passwd -p x -k passwd_modification
+
+## Login configuration and information
+-w /etc/login.defs -p wa -k login
+-w /etc/securetty -p wa -k login
+-w /var/log/faillog -p wa -k login
+-w /var/log/lastlog -p wa -k login
+-w /var/log/tallylog -p wa -k login
+
+### Detect Remote Shell Use
+-a always,exit -F arch=b64 -F exe=/bin/bash -F success=1 -S connect -k "remote_shell"
+-a always,exit -F arch=b64 -F exe=/usr/bin/bash -F success=1 -S connect -k "remote_shell"
+
+## Pam configuration
+-w /etc/pam.d/ -p wa -k pam
+-w /etc/security/limits.conf -p wa  -k pam
+-w /etc/security/limits.d -p wa  -k pam
+-w /etc/security/pam_env.conf -p wa -k pam
+-w /etc/security/namespace.conf -p wa -k pam
+-w /etc/security/namespace.d -p wa -k pam
+-w /etc/security/namespace.init -p wa -k pam
+
+## Critical elements access failures
+-a always,exit -F arch=b64 -S open -F dir=/etc -F success=0 -k unauthedfileaccess
+-a always,exit -F arch=b64 -S open -F dir=/bin -F success=0 -k unauthedfileaccess
+-a always,exit -F arch=b64 -S open -F dir=/sbin -F success=0 -k unauthedfileaccess
+-a always,exit -F arch=b64 -S open -F dir=/usr/bin -F success=0 -k unauthedfileaccess
+-a always,exit -F arch=b64 -S open -F dir=/usr/sbin -F success=0 -k unauthedfileaccess
+-a always,exit -F arch=b64 -S open -F dir=/var -F success=0 -k unauthedfileaccess
+-a always,exit -F arch=b64 -S open -F dir=/home -F success=0 -k unauthedfileaccess
+-a always,exit -F arch=b64 -S open -F dir=/srv -F success=0 -k unauthedfileaccess
+
+## Reconnaissance
+-w /usr/bin/whoami -p x -k recon
+-w /usr/bin/id -p x -k recon
+-w /bin/hostname -p x -k recon
+-w /bin/uname -p x -k recon
+-w /etc/issue -p r -k recon
+-w /etc/hostname -p r -k recon
+
+## Suspicious activity
+-w /usr/bin/wget -p x -k susp_activity
+-w /usr/bin/curl -p x -k susp_activity
+-w /usr/bin/base64 -p x -k susp_activity
+-w /bin/nc -p x -k susp_activity
+-w /bin/netcat -p x -k susp_activity
+-w /usr/bin/ncat -p x -k susp_activity
+-w /usr/bin/ss -p x -k susp_activity
+-w /usr/bin/netstat -p x -k susp_activity
+-w /usr/bin/ssh -p x -k susp_activity
+-w /usr/bin/scp -p x -k susp_activity
+-w /usr/bin/sftp -p x -k susp_activity
+-w /usr/bin/ftp -p x -k susp_activity
+-w /usr/bin/socat -p x -k susp_activity
+-w /usr/bin/wireshark -p x -k susp_activity
+-w /usr/bin/tshark -p x -k susp_activity
+-w /usr/bin/rawshark -p x -k susp_activity
+-w /usr/bin/rdesktop -p x -k susp_activity
+-w /usr/local/bin/rdesktop -p x -k susp_activity
+-w /usr/bin/wlfreerdp -p x -k susp_activity
+-w /usr/bin/xfreerdp -p x -k susp_activity
+-w /usr/local/bin/xfreerdp -p x -k susp_activity
+-w /usr/bin/nmap -p x -k susp_activity
+
+### uftp
+### https://sourceforge.net/projects/uftp-multicast/
+### UFTP is an encrypted multicast file transfer program, designed to securely, reliably, 
+### and efficiently transfer files to multiple receivers simultaneously.
+### FTP also has the capability to communicate over disjoint networks separated by one or 
+### more firewalls (NAT traversal) and without full end-to-end multicast capability 
+### (multicast tunneling) through the use of a UFTP proxy server.
+### T1133_External_Remote_Services
+-w /usr/bin/uftp -p x -k susp_activity
+-w /usr/sbin/uftp -p x -k susp_activity
+
+-w /lib/systemd/system/uftp.service -k susp_activity
+-w /usr/lib/systemd/system/uftp.service -k susp_activity
+
+### atftpd
+### https://sourceforge.net/projects/atftp/
+### https://github.com/madmartin/atftp
+### atftp is a client/server implementation of the TFTP protocol that implements RFCs 1350, 2090, 2347, 2348, 2349 and 7440. 
+### The server is multi-threaded and the client presents a friendly interface using libreadline.
+### T1133_External_Remote_Services
+-w /usr/bin/atftpd -p x -k susp_activity
+-w /usr/sbin/atftpd -p x -k susp_activity
+
+-w /usr/bin/in.tftpd -p x -k susp_activity
+-w /usr/sbin/in.tftpd -p x -k susp_activity
+
+-w /lib/systemd/system/atftpd.service -k susp_activity
+-w /usr/lib/systemd/system/atftpd.service -k susp_activity
+
+-w /lib/systemd/system/atftpd.socket -k susp_activity
+-w /usr/lib/systemd/system/atftpd.socket -k susp_activity
+
+## sssd
+-a always,exit -F path=/usr/libexec/sssd/p11_child -F perm=x -F auid>=500 -F auid!=4294967295 -k T1078_Valid_Accounts
+-a always,exit -F path=/usr/libexec/sssd/krb5_child -F perm=x -F auid>=500 -F auid!=4294967295 -k T1078_Valid_Accounts
+-a always,exit -F path=/usr/libexec/sssd/ldap_child -F perm=x -F auid>=500 -F auid!=4294967295 -k T1078_Valid_Accounts
+-a always,exit -F path=/usr/libexec/sssd/selinux_child -F perm=x -F auid>=500 -F auid!=4294967295 -k T1078_Valid_Accounts
+-a always,exit -F path=/usr/libexec/sssd/proxy_child -F perm=x -F auid>=500 -F auid!=4294967295 -k T1078_Valid_Accounts
+
+## vte-2.91
+-a always,exit -F path=/lib64/vte-2.91/gnome-pty-helper -F perm=x -F auid>=500 -F auid!=4294967295 -k T1078_Valid_Accounts
+-a always,exit -F path=/usr/lib64/vte-2.91/gnome-pty-helper -F perm=x -F auid>=500 -F auid!=4294967295 -k T1078_Valid_Accounts
+
+## T1002 Data Compressed
+
+-w /usr/bin/zip -p x -k Data_Compressed
+-w /usr/bin/gzip -p x -k Data_Compressed
+-w /usr/bin/tar -p x -k Data_Compressed
+-w /usr/bin/bzip2 -p x -k Data_Compressed
+
+-w /usr/bin/lzip -p x -k Data_Compressed
+-w /usr/local/bin/lzip -p x -k Data_Compressed
+
+-w /usr/bin/lz4 -p x -k Data_Compressed
+-w /usr/local/bin/lz4 -p x -k Data_Compressed
+
+-w /usr/bin/lzop -p x -k Data_Compressed
+-w /usr/local/bin/lzop -p x -k Data_Compressed
+
+-w /usr/bin/plzip -p x -k Data_Compressed
+-w /usr/local/bin/plzip -p x -k Data_Compressed
+
+-w /usr/bin/pbzip2 -p x -k Data_Compressed
+-w /usr/local/bin/pbzip2 -p x -k Data_Compressed
+
+-w /usr/bin/lbzip2 -p x -k Data_Compressed
+-w /usr/local/bin/lbzip2 -p x -k Data_Compressed
+
+-w /usr/bin/pixz -p x -k Data_Compressed
+-w /usr/local/bin/pixz -p x -k Data_Compressed
+
+-w /usr/bin/pigz -p x -k Data_Compressed
+-w /usr/local/bin/pigz -p x -k Data_Compressed
+-w /usr/bin/unpigz -p x -k Data_Compressed
+-w /usr/local/bin/unpigz -p x -k Data_Compressed
+
+-w /usr/bin/zstd -p x -k Data_Compressed
+-w /usr/local/bin/zstd -p x -k Data_Compressed
+
+## Added to catch netcat on Ubuntu
+-w /bin/nc.openbsd -p x -k susp_activity
+-w /bin/nc.traditional -p x -k susp_activity
+
+## Sbin suspicious activity
+-w /sbin/iptables -p x -k sbin_susp
+-w /sbin/ip6tables -p x -k sbin_susp
+-w /sbin/ifconfig -p x -k sbin_susp
+-w /usr/sbin/arptables -p x -k sbin_susp
+-w /usr/sbin/ebtables -p x -k sbin_susp
+-w /sbin/xtables-nft-multi -p x -k sbin_susp
+-w /usr/sbin/nft -p x -k sbin_susp
+-w /usr/sbin/tcpdump -p x -k sbin_susp
+-w /usr/sbin/traceroute -p x -k sbin_susp
+-w /usr/sbin/ufw -p x -k sbin_susp
+
+### kde4
+-a always,exit -F path=/usr/libexec/kde4/kpac_dhcp_helper -F perm=x -F auid>=1000 -F auid!=4294967295 -k T1078_Valid_Accounts
+-a always,exit -F path=/usr/libexec/kde4/kdesud -F perm=x -F auid>=1000 -F auid!=4294967295 -k T1078_Valid_Accounts
+
+## dbus-send invocation
+### may indicate privilege escalation CVE-2021-3560
+-w /usr/bin/dbus-send -p x -k dbus_send
+-w /usr/bin/gdbus -p x -k gdubs_call
+
+## setfiles
+-a always,exit -F path=/usr/bin/setfiles -F perm=x -F auid>=500 -F auid!=4294967295 -k -F T1078_Valid_Accounts
+-a always,exit -F path=/usr/sbin/setfiles -F perm=x -F auid>=500 -F auid!=4294967295 -k -F T1078_Valid_Accounts
+
+### dbus
+-a always,exit -F path=/lib64/dbus-1/dbus-daemon-launch-helper -F perm=x -F auid>=500 -F auid!=4294967295 -k T1078_Valid_Accounts
+-a always,exit -F path=/usr/lib64/dbus-1/dbus-daemon-launch-helper -F perm=x -F auid>=500 -F auid!=4294967295 -k T1078_Valid_Accounts
+
+## pkexec invocation
+### may indicate privilege escalation CVE-2021-4034
+-w /usr/bin/pkexec -p x -k pkexec
+
+## Suspicious shells
+-w /bin/ash -p x -k susp_shell
+-w /bin/csh -p x -k susp_shell
+-w /bin/fish -p x -k susp_shell
+-w /bin/tcsh -p x -k susp_shell
+-w /bin/tclsh -p x -k susp_shell
+-w /bin/xonsh -p x -k susp_shell
+-w /usr/local/bin/xonsh -p x -k susp_shell
+-w /bin/open -p x -k susp_shell
+-w /bin/rbash -p x -k susp_shell
+
+### https://gtfobins.github.io/gtfobins/wish/
+-w /bin/wish -p x -k susp_shell
+-w /usr/bin/wish -p x -k susp_shell
+
+### https://gtfobins.github.io/gtfobins/yash/
+-w /bin/yash -p x -k susp_shell
+-w /usr/bin/yash -p x -k susp_shell
+
+# Web Server Actvity
+## Change the number "33" to the ID of your WebServer user. Default: www-data:x:33:33
+-a always,exit -F arch=b64 -S execve -F euid=33 -k detect_execve_www
+
+### https://clustershell.readthedocs.io/
+-w /bin/clush -p x -k susp_shell
+-w /usr/local/bin/clush -p x -k susp_shell
+-w /etc/clustershell/clush.conf -p x -k susp_shell
+
+### https://github.com/tmux/tmux
+-w /bin/tmux -p x -k susp_shell
+-w /usr/local/bin/tmux -p x -k susp_shell
+
+## Shell/profile configurations
+-w /etc/profile.d/ -p wa -k shell_profiles
+-w /etc/profile -p wa -k shell_profiles
+-w /etc/shells -p wa -k shell_profiles
+-w /etc/bashrc -p wa -k shell_profiles
+-w /etc/csh.cshrc -p wa -k shell_profiles
+-w /etc/csh.login -p wa -k shell_profiles
+-w /etc/fish/ -p wa -k shell_profiles
+-w /etc/zsh/ -p wa -k shell_profiles
+
+### https://github.com/xxh/xxh
+-w /usr/local/bin/xxh.bash -p x -k susp_shell
+-w /usr/local/bin/xxh.xsh -p x -k susp_shell
+-w /usr/local/bin/xxh.zsh -p x -k susp_shell
+
+## Injection
+### These rules watch for code injection by the ptrace facility.
+### This could indicate someone trying to do something bad or just debugging
+-a always,exit -F arch=b64 -S ptrace -F a0=0x4 -k code_injection
+-a always,exit -F arch=b64 -S ptrace -F a0=0x5 -k data_injection
+-a always,exit -F arch=b64 -S ptrace -F a0=0x6 -k register_injection
+-a always,exit -F arch=b64 -S ptrace -k tracing
+
+## Anonymous File Creation
+### These rules watch the use of memfd_create
+### "memfd_create" creates anonymous file and returns a file descriptor to access it
+### When combined with "fexecve" can be used to stealthily run binaries in memory without touching disk
+-a always,exit -F arch=b64 -S memfd_create -F key=anon_file_create
+
+## Privilege Abuse
+### The purpose of this rule is to detect when an admin may be abusing power by looking in user's home dir.
+-a always,exit -F dir=/home -F auid=0 -F auid>=1000 -F auid!=-1 -C auid!=obj_uid -k power_abuse
+
+# Socket Creations
+# will catch both IPv4 and IPv6
+
+-a always,exit -F arch=b32 -S socket -F a0=2  -k network_socket_created
+-a always,exit -F arch=b64 -S socket -F a0=2  -k network_socket_created
+
+-a always,exit -F arch=b32 -S socket -F a0=10 -k network_socket_created
+-a always,exit -F arch=b64 -S socket -F a0=10 -k network_socket_created
+
+
+## Audit the audit logs. 
+## successful and unsuccessful attempts to read information from the
+## audit records; all modifications to the audit trail
+-w /var/log/audit/ -k auditlog
+
+## Auditd configuration
+## modifications to audit configuration that occur while the audit
+## collection functions are operating.
+-w /etc/audit/ -p wa -k auditconfig
+-w /etc/libaudit.conf -p wa -k auditconfig
+-w /etc/audisp/ -p wa -k audispconfig
+
+## Monitor for use of audit management tools
+-w /sbin/auditctl -p x -k audittools
+-w /sbin/auditd -p x -k audittools
+
+## Monitor AppArmor configuration changes.
+-w /etc/apparmor/ -p wa -k apparmor
+-w /etc/apparmor.d/ -p wa -k apparmor
+
+# Monitor usage of AppArmor tools.
+-w /sbin/apparmor_parser -p x -k apparmor_tools
+-w /usr/sbin/aa-complain -p x -k apparmor_tools
+-w /usr/sbin/aa-disable -p x -k apparmor_tools
+-w /usr/sbin/aa-enforce -p x -k apparmor_tools
+
+## Monitor systemd configuration changes
+-w /etc/systemd/ -p wa -k systemd
+-w /lib/systemd/ -p wa -k systemd
+
+## Monitor usage of systemd tools
+-w /bin/systemctl -p x -k systemd_tools
+-w /bin/journalctl -p x -k systemd_tools
+
+## special files
+-a always,exit -F arch=b32 -S mknod -S mknodat -k specialfiles
+-a always,exit -F arch=b64 -S mknod -S mknodat -k specialfiles
+
+## Mount operations
+-a always,exit -F arch=b32 -S mount -S umount -S umount2 -k mount
+-a always,exit -F arch=b64 -S mount -S umount2 -k mount 
+
+## changes to the time
+##
+-a always,exit -F arch=b32 -S adjtimex -S settimeofday -S clock_settime -k time
+-a always,exit -F arch=b64 -S adjtimex -S settimeofday -S clock_settime -k time
+
+## Use stunnel
+-w /usr/sbin/stunnel -p x -k stunnel
+
+## cron configuration & scheduled jobs
+-w /etc/cron.allow -p wa -k cron
+-w /etc/cron.deny -p wa -k cron
+-w /etc/cron.d/ -p wa -k cron
+-w /etc/cron.daily/ -p wa -k cron
+-w /etc/cron.hourly/ -p wa -k cron
+-w /etc/cron.monthly/ -p wa -k cron
+-w /etc/cron.weekly/ -p wa -k cron
+-w /etc/crontab -p wa -k cron
+-w /var/spool/cron/crontabs/ -k cron
+
+## user, group, password databases
+-w /etc/group -p wa -k etcgroup
+-w /etc/passwd -p wa -k etcpasswd
+-w /etc/gshadow -k etcgroup
+-w /etc/shadow -k etcpasswd
+-w /etc/security/opasswd -k opasswd
+
+## monitor usage of passwd
+-w /usr/bin/passwd -p x -k passwd_modification
+
+#Monitor for use of tools to change group identifiers
+-w /usr/sbin/groupadd -p x -k group_modification
+-w /usr/sbin/groupmod -p x -k group_modification
+-w /usr/sbin/addgroup -p x -k group_modification
+-w /usr/sbin/useradd -p x -k user_modification
+-w /usr/sbin/usermod -p x -k user_modification
+-w /usr/sbin/adduser -p x -k user_modification
+
+## login configuration and information
+-w /etc/login.defs -p wa -k login
+-w /etc/securetty -p wa -k login
+-w /var/log/faillog -p wa -k login
+-w /var/log/lastlog -p wa -k login
+-w /var/log/tallylog -p wa -k login
+
+## network configuration
+-w /etc/hosts -p wa -k hosts
+-w /etc/network/ -p wa -k network
+
+## system startup scripts
+-w /etc/inittab -p wa -k init
+-w /etc/init.d/ -p wa -k init
+-w /etc/init/ -p wa -k init
+
+## library search paths
+-w /etc/ld.so.conf -p wa -k libpath
+
+## local time zone
+-w /etc/localtime -p wa -k localtime
+
+## time zone configuration.
+-w /etc/timezone -p wa -k timezone
+
+## kernel parameters
+-w /etc/sysctl.conf -p wa -k sysctl
+
+## modprobe configuration
+-w /etc/modprobe.conf -p wa -k modprobe
+-w /etc/modprobe.d/ -p wa -k modprobe
+-w /etc/modules -p wa -k modprobe
+
+# Module manipulations.
+-a always,exit -S init_module -S delete_module -k modules
+
+## pam configuration
+-w /etc/pam.d/ -p wa -k pam
+-w /etc/security/limits.conf -p wa  -k pam
+-w /etc/security/pam_env.conf -p wa -k pam
+-w /etc/security/namespace.conf -p wa -k pam
+-w /etc/security/namespace.init -p wa -k pam
+
+## Puppet SSL
+-w /etc/puppet/ssl -p wa -k puppet_ssl
+
+## postfix configuration
+-w /etc/aliases -p wa -k mail
+-w /etc/postfix/ -p wa -k mail
+
+## ssh configuration
+-w /etc/ssh/sshd_config -k sshd
+
+## changes to hostname
+-a exit,always -F arch=b32 -S sethostname -k hostname
+-a exit,always -F arch=b64 -S sethostname -k hostname
+
+## changes to issue
+-w /etc/issue -p wa -k etcissue
+-w /etc/issue.net -p wa -k etcissue
+
+## Changes to IPsec configuration.
+-w /etc/ipsec.conf -p wa -k ipsec
+-w /etc/ipsec.d/ -p wa -k ipsec
+-w /etc/ipsec.secrets -p wa -k ipsec
+
+## Changes to strongSwan configuration.
+-w /etc/strongswan.conf -p wa -k strongswan
+-w /etc/strongswan.d/ -p wa -k strongswan
+
+
+## Capture all failures to access on critical elements
+-a exit,always -F arch=b64 -S open -F dir=/etc -F success=0 -k unauthedfileaccess
+-a exit,always -F arch=b64 -S open -F dir=/bin -F success=0 -k unauthedfileaccess
+-a exit,always -F arch=b64 -S open -F dir=/sbin -F success=0 -k unauthedfileaccess
+-a exit,always -F arch=b64 -S open -F dir=/usr/bin -F success=0 -k unauthedfileaccess
+-a exit,always -F arch=b64 -S open -F dir=/usr/sbin -F success=0 -k unauthedfileaccess
+-a exit,always -F arch=b64 -S open -F dir=/var -F success=0 -k unauthedfileaccess
+-a exit,always -F arch=b64 -S open -F dir=/home -F success=0 -k unauthedfileaccess
+-a exit,always -F arch=b64 -S open -F dir=/srv -F success=0 -k unauthedfileaccess
+-a exit,always -F arch=b64 -S open -F dir=/tmp -F success=0 -k unauthedfileaccess
+
+## Monitor for use of process ID change (switching accounts) applications
+-w /bin/su -p x -k priv_esc
+-w /usr/bin/sudo -p x -k priv_esc
+-w /etc/sudoers -p rw -k priv_esc
+
+## Monitor usage of commands to change power state
+-w /sbin/shutdown -p x -k power
+-w /sbin/poweroff -p x -k power
+-w /sbin/reboot -p x -k power
+-w /sbin/halt -p x -k power
+
+## Monitor admins accessing user files.
+-a always,exit -F dir=/home/ -F uid=0 -C auid!=obj_uid -k admin_user_home
+
+## Monitor changes and executions in /tmp and /var/tmp.
+-w /tmp/ -p wxa -k tmp
+-w /var/tmp/ -p wxa -k tmp
